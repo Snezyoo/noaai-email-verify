@@ -1,18 +1,18 @@
-# NOA AI - Email Verification & Password Reset Web Service
+# NOA AI - Email Verification & Password Reset Web Service 🚀
 
-This repository powers the email confirmation redirect and password reset portal for the **NOA AI** application.
+> **Live Deployment:** [https://noaai-email-verify.vercel.app](https://noaai-email-verify.vercel.app/)
+
+This repository powers the email verification redirect handler and password reset portal for the **NOA AI** application.
 
 ## Endpoints
 
-- **/** - Connection Authenticated / Verification landing page. Auto-redirects to myapp://auth-callback while forwarding authentication tokens.
-- **/open** - Email verification confirmation endpoint (/open/).
-- **/reset** - Supabase password recovery & reset portal with dual show/hide toggles and live validation.
-- **/forgot** - Password recovery request portal.
+- **/** - [Connection Authenticated](https://noaai-email-verify.vercel.app/) verification landing page. Preserves Supabase tokens and auto-redirects to myapp://auth-callback.
+- **/open** - [Email Confirmed](https://noaai-email-verify.vercel.app/open/) redirect endpoint.
+- **/reset** - [Reset Password](https://noaai-email-verify.vercel.app/reset/) portal with dual show/hide eye toggles, token exchange (PKCE & Hash), and Supabase JS SDK integration.
+- **/forgot** - [Forgot Password](https://noaai-email-verify.vercel.app/forgot/) recovery request portal.
 
-## Deploying to Vercel
+## Features
 
-1. Log in to [Vercel](https://vercel.com).
-2. Click **Add New...** -> **Project**.
-3. Import this repository: Snezyoo/noaai-email-verify.
-4. Keep the Framework Preset as **Other** and Root Directory as ./.
-5. Click **Deploy**.
+- Built with modern vanilla HTML/CSS and responsive dark glassmorphism styling.
+- Zero dependencies — fast global edge CDN distribution via Vercel.
+- Direct native Android handshake via deep links (myapp://auth-callback).
