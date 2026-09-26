@@ -7,25 +7,44 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>Reset Password – NOA AI</title>
+    <!-- Supabase JS Client for Instant Password Recovery -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ── Reset & Base ───────────────────────────────────────────────── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg-color: #080510;
+            --card-bg: rgba(18, 12, 36, 0.88);
+            --primary: #ffd700;
+            --accent: #bc13fe;
+            --accent-glow: #6b11ff;
+            --text-main: #f3edfd;
+            --text-muted: #9c8eb9;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border-color: rgba(188, 19, 254, 0.25);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                         Helvetica, Arial, sans-serif;
-            background: #090713;
-            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(107, 17, 255, 0.22) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(188, 19, 254, 0.18) 0px, transparent 50%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            color: var(--text-main);
             overflow-x: hidden;
         }
 
-        /* ── Floating Toast ─────────────────────────────────────────────── */
+        /* ── Floating Toast ── */
         #noa-toast {
             position: fixed;
             top: -120px;
@@ -35,8 +54,7 @@
             border: 1px solid #3b3267;
             padding: 13px 26px;
             border-radius: 999px;
-            box-shadow: 0 12px 32px rgba(0,0,0,.55),
-                        0 0 20px rgba(168,85,247,.25);
+            box-shadow: 0 12px 32px rgba(0,0,0,.55), 0 0 20px rgba(168,85,247,.25);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -46,202 +64,398 @@
             z-index: 9999;
             opacity: 0;
             pointer-events: none;
-            transition: top .45s cubic-bezier(.175,.885,.32,1.275),
-                        opacity .3s ease;
+            transition: top .45s cubic-bezier(.175,.885,.32,1.275), opacity .3s ease;
         }
         #noa-toast.visible        { top: 24px; opacity: 1; pointer-events: auto; }
         #noa-toast.type-success   { border-color: #22c55e; color: #4ade80; }
         #noa-toast.type-error     { border-color: #ef4444; color: #f87171; }
 
-        /* ── Card ───────────────────────────────────────────────────────── */
-        .card {
-            background: #131124;
-            border: 1px solid #231f42;
-            border-radius: 20px;
-            padding: 38px 32px;
+        /* ── Container & Card ── */
+        .container {
             width: 100%;
-            max-width: 420px;
-            box-shadow: 0 20px 50px rgba(0,0,0,.6);
+            max-width: 460px;
+            perspective: 1000px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 
+                0 8px 32px 0 rgba(107, 17, 255, 0.25),
+                inset 0 0 16px rgba(188, 19, 254, 0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 40px 32px;
             text-align: center;
+            animation: entryScaleFade 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        .card h1 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #a855f7;
+        @keyframes entryScaleFade {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* ── Hexagon Logo ── */
+        .logo-wrapper {
+            margin-bottom: 24px;
+            display: inline-block;
+        }
+
+        .logo-hexagon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-glow) 100%);
+            clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 24px rgba(188, 19, 254, 0.5);
+            animation: pulseGlow 3s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(188, 19, 254, 0.4); }
+            50% { transform: scale(1.04); box-shadow: 0 0 35px rgba(188, 19, 254, 0.7); }
+        }
+
+        .logo-inner {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 800;
             margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 30%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .card p {
-            color: #94a3b8;
+        p.subtitle {
+            color: var(--text-muted);
             font-size: 14px;
             line-height: 1.55;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
         }
 
-        /* ── Input Groups ───────────────────────────────────────────────── */
+        /* ── Status Badge ── */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 50px;
+            margin-bottom: 20px;
+            letter-spacing: 0.8px;
+        }
+        .status-ready {
+            background: rgba(188, 19, 254, 0.15);
+            border: 1px solid rgba(188, 19, 254, 0.35);
+            color: #d8b4fe;
+        }
+        .status-success {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #4ade80;
+        }
+
+        /* ── Input Fields ── */
         .field {
             position: relative;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             text-align: left;
+        }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
         }
 
         .field input {
             width: 100%;
-            padding: 14px 50px 14px 16px;
-            background: #090713;
-            border: 1px solid #28234a;
+            padding: 14px 44px 14px 16px;
+            background: #0f0c1f;
+            border: 1px solid rgba(188, 19, 254, 0.25);
             border-radius: 12px;
             color: #fff;
             font-size: 15px;
             outline: none;
-            transition: border-color .2s, box-shadow .2s;
+            transition: all 0.2s ease;
         }
-        .field input:focus {
-            border-color: #a855f7;
-            box-shadow: 0 0 0 3px rgba(168,85,247,.2);
-        }
-        .field input::placeholder { color: #64748b; }
 
-        /* ── Eye Toggle ─────────────────────────────────────────────────── */
+        .field input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(188, 19, 254, 0.2);
+        }
+
+        .field input::placeholder {
+            color: #555770;
+        }
+
+        /* ── Eye Toggle Button ── */
         .eye-btn {
             position: absolute;
-            right: 13px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
-            color: #64748b;
+            color: var(--text-muted);
             cursor: pointer;
-            padding: 5px;
+            padding: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 6px;
-            transition: color .2s;
+            transition: color 0.2s;
         }
-        .eye-btn:hover { color: #a855f7; }
-        .eye-btn svg {
-            pointer-events: none;
-            display: inline-block;
-            vertical-align: middle;
-        }
-        .eye-slash { display: none; }
+        .eye-btn:hover { color: var(--accent); }
 
-        /* ── Submit Button ──────────────────────────────────────────────── */
-        #submit-btn {
-            width: 100%;
-            padding: 14px;
-            margin-top: 6px;
-            background: linear-gradient(135deg, #a855f7, #7c3aed);
-            border: none;
+        /* ── Password Constraints List ── */
+        .constraints-box {
+            background: rgba(188, 19, 254, 0.06);
+            border: 1px solid rgba(188, 19, 254, 0.18);
             border-radius: 12px;
-            color: #fff;
-            font-size: 16px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            text-align: left;
+            font-size: 12.5px;
+            line-height: 1.6;
+        }
+
+        .constraints-title {
+            font-weight: 700;
+            color: #d8b4fe;
+            margin-bottom: 6px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .constraint-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8b88a8;
+            transition: color 0.2s;
+        }
+
+        .constraint-item.valid {
+            color: #4ade80;
             font-weight: 600;
+        }
+
+        .constraint-icon {
+            font-size: 12px;
+        }
+
+        /* ── Action Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 15px 24px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-glow) 100%);
+            border: none;
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
             cursor: pointer;
-            transition: transform .2s, box-shadow .2s;
+            box-shadow: 0 4px 16px rgba(107, 17, 255, 0.4);
+            transition: all 0.25s ease;
         }
-        #submit-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 22px rgba(168,85,247,.35);
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(188, 19, 254, 0.6);
         }
-        #submit-btn:active:not(:disabled) { transform: translateY(0); }
-        #submit-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .redirect-notice {
+            margin-top: 18px;
+            font-size: 13px;
+            color: rgba(156, 142, 185, 0.8);
+        }
+
+        #countdown {
+            font-weight: bold;
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
 
-    <!-- ── Toast notification ───────────────────────────────────────────── -->
+    <!-- ── Toast notification ── -->
     <div id="noa-toast" role="alert" aria-live="polite">
         <span id="noa-toast-icon"></span>
         <span id="noa-toast-msg">Notification</span>
     </div>
 
-    <!-- ── Reset card ───────────────────────────────────────────────────── -->
-    <div class="card">
-        <h1>Reset Password 🔐</h1>
-        <p>Enter your new secure password to update your NOA AI account.</p>
-
-        <form id="reset-form" novalidate>
-
-            <!-- New password -->
-            <div class="field">
-                <input
-                    type="password"
-                    id="inp-new"
-                    placeholder="New Password"
-                    autocomplete="new-password"
-                    minlength="6"
-                    required
-                >
-                <button type="button" id="toggle-new-btn" class="eye-btn" aria-label="Toggle Password">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                </button>
+    <div class="container">
+        <div class="card">
+            <div class="logo-wrapper">
+                <div class="logo-hexagon">
+                    <span class="logo-inner">N</span>
+                </div>
             </div>
 
-            <!-- Confirm password -->
-            <div class="field">
-                <input
-                    type="password"
-                    id="inp-confirm"
-                    placeholder="Confirm New Password"
-                    autocomplete="new-password"
-                    minlength="6"
-                    required
-                >
-                <button type="button" id="toggle-confirm-btn" class="eye-btn" aria-label="Toggle Password">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                </button>
-            </div>
+            <div id="status-badge" class="status-badge status-ready">Password Recovery</div>
 
-            <button type="submit" id="submit-btn">Update Password</button>
-        </form>
+            <h1 id="page-title">Reset Your Password 🔐</h1>
+            <p class="subtitle" id="page-subtitle">
+                Create a strong new password to secure and update your <span style="color:#f3edfd; font-weight:600;">NOA AI</span> account.
+            </p>
+
+            <form id="reset-form" novalidate>
+                <!-- New password -->
+                <div class="field">
+                    <label for="inp-new">New Password</label>
+                    <div class="input-wrapper">
+                        <input
+                            type="password"
+                            id="inp-new"
+                            placeholder="Enter new password"
+                            autocomplete="new-password"
+                            required
+                        >
+                        <button type="button" id="toggle-new-btn" class="eye-btn" aria-label="Toggle Password">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Password Constraints Checklist -->
+                <div class="constraints-box">
+                    <div class="constraints-title">Password Requirements:</div>
+                    <div class="constraint-item" id="req-length">
+                        <span class="constraint-icon" id="icon-length">○</span> At least 8 characters
+                    </div>
+                    <div class="constraint-item" id="req-upper">
+                        <span class="constraint-icon" id="icon-upper">○</span> At least one uppercase letter (A-Z)
+                    </div>
+                    <div class="constraint-item" id="req-lower">
+                        <span class="constraint-icon" id="icon-lower">○</span> At least one lowercase letter (a-z)
+                    </div>
+                    <div class="constraint-item" id="req-number">
+                        <span class="constraint-icon" id="icon-number">○</span> At least one number (0-9)
+                    </div>
+                    <div class="constraint-item" id="req-special">
+                        <span class="constraint-icon" id="icon-special">○</span> At least one special character (!@#$%^&*)
+                    </div>
+                </div>
+
+                <!-- Confirm password -->
+                <div class="field">
+                    <label for="inp-confirm">Confirm New Password</label>
+                    <div class="input-wrapper">
+                        <input
+                            type="password"
+                            id="inp-confirm"
+                            placeholder="Repeat new password"
+                            autocomplete="new-password"
+                            required
+                        >
+                        <button type="button" id="toggle-confirm-btn" class="eye-btn" aria-label="Toggle Password">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="submit-btn" class="btn">Update Password</button>
+            </form>
+
+            <!-- Success action container (hidden initially) -->
+            <div id="success-container" style="display:none; margin-top:20px;">
+                <a href="myapp://auth-callback" id="launch-app-btn" class="btn">
+                    Launch NOA AI App
+                </a>
+                <div class="redirect-notice" id="redirect-notice">
+                    Redirecting to app in <span id="countdown">4</span> seconds...
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
     (function () {
         'use strict';
 
-        // Sleek open eye
         const EYE_OPEN = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-
-        // Modern slash eye (clean diagonal cut across the eye with precise endpoints)
         const EYE_SLASH = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`;
 
-        /* ── Supabase client ──────────────────────────────────────────────── */
-        var SUPABASE_URL      = 'https://lumbpfcruwjqudtdbkrm.supabase.co';
-        var SUPABASE_ANON_KEY = 'sb_publishable_mUkwvs-7BXlOQmPTFBcXVQ_VEqmbQz_';
-        var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ── Supabase client ──
+        const SUPABASE_URL      = 'https://lumbpfcruwjqudtdbkrm.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_mUkwvs-7BXlOQmPTFBcXVQ_VEqmbQz_';
+        const supabase = (window.supabase && window.supabase.createClient)
+            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+            : null;
 
         let sessionEstablished = false;
 
-        // Register Auth state listener BEFORE handling incoming auth token
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN' || session) {
-                sessionEstablished = true;
-            }
-        });
+        // Register Auth state listener
+        if (supabase) {
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN' || session) {
+                    sessionEstablished = true;
+                }
+            });
+        }
 
         async function handleIncomingAuth() {
-            // 1. Check for PKCE flow (?code=...)
+            if (!supabase) return;
+
             const urlParams = new URLSearchParams(window.location.search);
+            const tokenHash = urlParams.get('token_hash') || urlParams.get('token');
             const code = urlParams.get('code');
-            
-            if (code) {
-                const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            const hash = window.location.hash || "";
+
+            // 1. Direct token_hash (from Resend recovery email)
+            if (tokenHash) {
+                const { data, error } = await supabase.auth.verifyOtp({
+                    token_hash: tokenHash,
+                    type: 'recovery'
+                });
                 if (!error && data.session) {
                     sessionEstablished = true;
-                    // Clean URL without reloading page
+                    showToast('Recovery session authenticated! Set your new password.', 'success');
                     window.history.replaceState({}, document.title, window.location.pathname);
                     return;
                 }
             }
 
-            // 2. Explicit Hash token parsing & session initialization (#access_token=...)
-            const hash = window.location.hash;
-            const hasHashToken = hash.includes('access_token=') || hash.includes('type=recovery');
+            // 2. PKCE code exchange (?code=...)
+            if (code) {
+                const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+                if (!error && data.session) {
+                    sessionEstablished = true;
+                    showToast('Recovery session authenticated! Set your new password.', 'success');
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    return;
+                }
+            }
 
+            // 3. Hash fragment (#access_token=...)
             if (hash && hash.includes('access_token=')) {
                 const hashParams = new URLSearchParams(hash.substring(1));
                 const accessToken = hashParams.get('access_token');
@@ -254,40 +468,99 @@
                     });
                     if (!error && data.session) {
                         sessionEstablished = true;
+                        showToast('Recovery session authenticated! Set your new password.', 'success');
                         window.history.replaceState({}, document.title, window.location.pathname);
                         return;
                     }
                 }
             }
 
-            // 3. Check for active session in storage/memory
+            // 4. Existing active session
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
                 sessionEstablished = true;
                 return;
             }
 
-            // If no code in URL, no hash token, and no existing session, show UI warning
-            if (!code && !hasHashToken && !sessionEstablished) {
-                showToast('No reset token found. Please open the link directly from your email.', 'error');
+            if (!code && !tokenHash && !hash.includes('access_token=')) {
+                showToast('No reset token found. Please click the link directly in your email.', 'error');
             }
         }
 
         handleIncomingAuth();
 
-        /* ── Toast ────────────────────────────────────────────────────────── */
-        var _toastTimer = null;
+        /* ── Live Password Constraints Checking ── */
+        const inpNew = document.getElementById('inp-new');
+        const inpConfirm = document.getElementById('inp-confirm');
+
+        const reqLength = document.getElementById('req-length');
+        const reqUpper  = document.getElementById('req-upper');
+        const reqLower  = document.getElementById('req-lower');
+        const reqNumber = document.getElementById('req-number');
+        const reqSpecial= document.getElementById('req-special');
+
+        function updateRequirement(el, iconId, isValid) {
+            const icon = document.getElementById(iconId);
+            if (isValid) {
+                el.classList.add('valid');
+                if (icon) icon.textContent = '✓';
+            } else {
+                el.classList.remove('valid');
+                if (icon) icon.textContent = '○';
+            }
+        }
+
+        function validatePassword(pwd) {
+            const hasLength  = pwd.length >= 8;
+            const hasUpper   = /[A-Z]/.test(pwd);
+            const hasLower   = /[a-z]/.test(pwd);
+            const hasNumber  = /[0-9]/.test(pwd);
+            const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
+
+            updateRequirement(reqLength,  'icon-length',  hasLength);
+            updateRequirement(reqUpper,   'icon-upper',   hasUpper);
+            updateRequirement(reqLower,   'icon-lower',   hasLower);
+            updateRequirement(reqNumber,  'icon-number',  hasNumber);
+            updateRequirement(reqSpecial, 'icon-special', hasSpecial);
+
+            return hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
+        }
+
+        if (inpNew) {
+            inpNew.addEventListener('input', function() {
+                validatePassword(inpNew.value);
+            });
+        }
+
+        /* ── Eye Toggle Helper ── */
+        function attachEyeToggle(btnId, inputId) {
+            const btn   = document.getElementById(btnId);
+            const input = document.getElementById(inputId);
+            if (!btn || !input) return;
+
+            btn.innerHTML = EYE_OPEN;
+
+            btn.addEventListener('click', function () {
+                const isPassword = (input.type === 'password');
+                input.type = isPassword ? 'text' : 'password';
+                btn.innerHTML = isPassword ? EYE_SLASH : EYE_OPEN;
+            });
+        }
+
+        attachEyeToggle('toggle-new-btn',     'inp-new');
+        attachEyeToggle('toggle-confirm-btn', 'inp-confirm');
+
+        /* ── Toast Helper ── */
+        let _toastTimer = null;
         function showToast(msg, type) {
-            var el   = document.getElementById('noa-toast');
-            var icon = document.getElementById('noa-toast-icon');
-            var txt  = document.getElementById('noa-toast-msg');
+            const el   = document.getElementById('noa-toast');
+            const icon = document.getElementById('noa-toast-icon');
+            const txt  = document.getElementById('noa-toast-msg');
 
             icon.textContent = (type === 'success') ? '✅' : '⚠️';
             txt.textContent  = msg;
 
-            // Remove previous state classes
             el.classList.remove('visible', 'type-success', 'type-error');
-            // Force reflow so the re-add triggers the transition
             void el.offsetHeight;
             el.classList.add('visible', 'type-' + type);
 
@@ -297,36 +570,18 @@
             }, 4500);
         }
 
-        /* ── Eye-toggle helper ────────────────────────────────────────────── */
-        function attachEyeToggle(btnId, inputId) {
-            var btn   = document.getElementById(btnId);
-            var input = document.getElementById(inputId);
-            if (!btn || !input) return;
-
-            btn.innerHTML = EYE_OPEN;
-
-            btn.addEventListener('click', function () {
-                var isPassword = (input.type === 'password');
-                input.type = isPassword ? 'text' : 'password';
-                btn.innerHTML = isPassword ? EYE_SLASH : EYE_OPEN;
-            });
-        }
-
-        attachEyeToggle('toggle-new-btn',     'inp-new');
-        attachEyeToggle('toggle-confirm-btn', 'inp-confirm');
-
-        /* ── Form submit ──────────────────────────────────────────────────── */
-        var form      = document.getElementById('reset-form');
-        var submitBtn = document.getElementById('submit-btn');
+        /* ── Form Submit ── */
+        const form = document.getElementById('reset-form');
+        const submitBtn = document.getElementById('submit-btn');
 
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            var newPassword = document.getElementById('inp-new').value.trim();
-            var confirmPwd  = document.getElementById('inp-confirm').value.trim();
+            const newPassword = inpNew.value.trim();
+            const confirmPwd  = inpConfirm.value.trim();
 
-            if (newPassword.length < 6) {
-                showToast('Password must be at least 6 characters.', 'error');
+            if (!validatePassword(newPassword)) {
+                showToast('Password must meet all 5 requirements listed above.', 'error');
                 return;
             }
             if (newPassword !== confirmPwd) {
@@ -340,31 +595,52 @@
             const { data: { session } } = await supabase.auth.getSession();
             
             if (!session && !sessionEstablished) {
-                showToast('Invalid or expired link. Please request a new password reset email.', 'error');
+                showToast('Invalid or expired link. Please request a new reset email.', 'error');
                 submitBtn.disabled  = false;
                 submitBtn.innerText = 'Update Password';
                 return;
             }
 
-            const { error } = await supabase.auth.updateUser({ password: newPassword });
+            // Update user password in Supabase
+            const { data, error } = await supabase.auth.updateUser({ password: newPassword });
 
             if (error) {
                 let msg = error.message;
                 if (error.status === 429 || (msg && (msg.includes('429') || msg.toLowerCase().includes('rate') || msg.toLowerCase().includes('too many')))) {
-                    msg = 'Too many reset attempts! Please wait 5 minutes before trying again.';
-                } else if (error.status === 401 || (msg && (msg.toLowerCase().includes('expired') || msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('session')))) {
-                    msg = 'Invalid or expired link. Please request a new password reset email.';
+                    msg = 'Too many attempts! Please wait 5 minutes before trying again.';
+                } else if (error.status === 401 || (msg && (msg.toLowerCase().includes('expired') || msg.toLowerCase().includes('invalid')))) {
+                    msg = 'Your reset link has expired. Please request a new reset email.';
                 }
                 showToast(msg, 'error');
                 submitBtn.disabled  = false;
                 submitBtn.innerText = 'Update Password';
             } else {
-                showToast('Password reset successfully!', 'success');
-                submitBtn.innerText = 'Updated!';
-                form.reset();
+                showToast('Password updated successfully in Supabase! 🎉', 'success');
+                
+                // Update UI to success state
+                document.getElementById('status-badge').textContent = 'Password Updated';
+                document.getElementById('status-badge').className = 'status-badge status-success';
+                document.getElementById('page-title').innerHTML = 'Password Updated! 🎉';
+                document.getElementById('page-subtitle').textContent = 'Your new password is now active. You can launch NOA AI to log in.';
+                form.style.display = 'none';
+
+                const successContainer = document.getElementById('success-container');
+                successContainer.style.display = 'block';
+
+                let timeLeft = 4;
+                const countdownEl = document.getElementById('countdown');
+                const targetUrl = "myapp://auth-callback";
+
+                const timer = setInterval(() => {
+                    timeLeft--;
+                    if (countdownEl) countdownEl.textContent = timeLeft;
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        window.location.href = targetUrl;
+                    }
+                }, 1000);
             }
         });
-
     })();
     </script>
 </body>
